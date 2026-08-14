@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1440｜北から読む日本</title>
+<meta name="description" content="1日を48に割り、30分ごとに日本を北から南へ降りていく時計。引く操作はありません。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#060d1f;
+  --navy:#0b1733;
+  --navy-2:#122350;
+  --gold:#c9a227;
+  --gold-pale:#efd98a;
+  --paper:#ece4d4;
+  --muted:#7987a8;
+  --rail-w:30px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ink);color:var(--paper)}
+body{
+  font-family:"Shippori Mincho B1",serif;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  padding-right:var(--rail-w);
+  background:
+    radial-gradient(120% 70% at 50% -10%, #16295b 0%, var(--navy) 45%, var(--ink) 100%);
+  min-height:100vh;
+}
+.mono{font-family:"DM Mono",ui-monospace,monospace;font-weight:300;font-feature-settings:"tnum"}
+
+/* ── 列島の目盛（signature） ───────────────── */
+.rail{
+  position:fixed;top:0;right:0;bottom:0;width:var(--rail-w);
+  background:linear-gradient(180deg,#0a1433 0%,#0a1430 100%);
+  border-left:1px solid rgba(201,162,39,.25);
+  display:flex;flex-direction:column;
+  z-index:20;
+}
+.tick{
+  flex:1;position:relative;
+  border-top:1px solid rgba(236,228,212,.07);
+}
+.tick:first-child{border-top:none}
+.tick::after{
+  content:"";position:absolute;right:5px;top:50%;
+  width:7px;height:1px;background:rgba(236,228,212,.22);
+}
+.tick.seen::after{background:var(--gold);width:13px;box-shadow:0 0 6px rgba(201,162,39,.6)}
+.tick.now{background:linear-gradient(90deg,rgba(201,162,39,0),rgba(201,162,39,.28))}
+.tick.now::after{background:var(--gold-pale);width:19px;height:2px}
+.rail-cap{
+  position:absolute;right:calc(var(--rail-w) + 6px);
+  font-size:9px;letter-spacing:.28em;color:rgba(236,228,212,.35);
+  writing-mode:vertical-rl;
+}
+.rail-cap.n{top:8px}
+.rail-cap.s{bottom:8px}
+
+/* ── 本体 ─────────────────────────────── */
+main{max-width:640px;margin:0 auto;padding:34px 22px 70px}
+.eyebrow{
+  font-size:10px;letter-spacing:.42em;color:var(--gold);
+  text-transform:none;margin-bottom:20px;
+}
+.clock{
+  font-size:clamp(40px,13vw,64px);line-height:1;letter-spacing:.02em;
+  color:var(--paper);
+}
+.clock .sec{color:rgba(236,228,212,.35);font-size:.5em}
+.slot-range{margin-top:8px;font-size:12px;letter-spacing:.18em;color:rgba(236,228,212,.45)}
+
+.lede{margin:26px 0 10px;font-size:13px;letter-spacing:.2em;color:rgba(236,228,212,.55)}
+
+/* 札 */
+.card{
+  border:1px solid rgba(201,162,39,.4);
+  background:linear-gradient(180deg,#0d1a3d,#0a132f);
+  padding:14px;
+}
+.card.turning{animation:turn .9s ease}
+@keyframes turn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+.frame{
+  position:relative;aspect-ratio:2/3;overflow:hidden;
+  background:#0a132c;display:flex;align-items:center;justify-content:center;
+}
+.frame img{width:100%;height:100%;object-fit:cover;display:block}
+.origin{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(60% 45% at 50% 42%,#1b3a6e 0%,#0c1a33 60%,#070f24 100%);
+}
+.origin span{
+  font-size:clamp(46px,16vw,86px);letter-spacing:.3em;text-indent:.3em;
+  color:var(--gold-pale);
+}
+.body{padding:22px 6px 6px;text-align:center}
+.pref{font-size:clamp(32px,10vw,46px);font-weight:700;letter-spacing:.18em;text-indent:.18em}
+.title{margin-top:6px;font-size:14px;letter-spacing:.22em;color:var(--gold-pale)}
+.tri{margin:18px auto;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:11px solid var(--gold)}
+.keyword{font-size:12px;letter-spacing:.3em;color:var(--gold)}
+.message{margin-top:10px;font-size:15px;color:var(--paper)}
+.scene{margin-top:14px;font-size:12.5px;line-height:1.9;color:rgba(236,228,212,.5)}
+.phantom{
+  display:inline-block;margin-top:14px;padding:3px 12px;
+  border:1px solid rgba(201,162,39,.5);font-size:10px;letter-spacing:.28em;color:var(--gold-pale);
+}
+
+/* 次 */
+.next{
+  margin-top:22px;display:flex;justify-content:space-between;align-items:baseline;
+  border-top:1px solid rgba(236,228,212,.12);padding-top:14px;
+  font-size:12px;letter-spacing:.16em;color:rgba(236,228,212,.55);
+}
+.next b{font-weight:400;color:var(--paper)}
+
+/* 記録 */
+.log{margin-top:40px;border-top:1px solid rgba(236,228,212,.12);padding-top:22px}
+.log h2{font-size:12px;letter-spacing:.32em;color:var(--gold);font-weight:500}
+.count{margin-top:12px;font-size:30px;letter-spacing:.04em}
+.count small{font-size:13px;color:rgba(236,228,212,.45);letter-spacing:.1em}
+.unseen{margin-top:16px;font-size:13px;line-height:2.1;color:rgba(236,228,212,.6)}
+.unseen b{color:var(--gold-pale);font-weight:400}
+.hint{margin-top:18px;font-size:12px;line-height:2;color:rgba(236,228,212,.4)}
+footer{
+  margin-top:46px;font-size:11px;letter-spacing:.14em;line-height:2.2;
+  color:rgba(236,228,212,.33);
+}
+footer a{color:rgba(236,228,212,.5)}
+.reset{
+  margin-top:18px;background:none;border:1px solid rgba(236,228,212,.2);
+  color:rgba(236,228,212,.45);font-family:inherit;font-size:11px;letter-spacing:.2em;
+  padding:7px 14px;cursor:pointer;
+}
+.reset:hover{border-color:var(--gold);color:var(--gold-pale)}
+:focus-visible{outline:2px solid var(--gold-pale);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){
+  .card.turning{animation:none}
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="rail" id="rail" aria-hidden="true"></div>
+<div class="rail-cap n">北</div>
+<div class="rail-cap s">南</div>
+
+<main>
+  <div class="eyebrow">1440 ／ 北から読む日本</div>
+  <div class="clock mono" id="clock">--:--<span class="sec">:--</span></div>
+  <div class="slot-range mono" id="range">--:-- — --:--</div>
+
+  <div class="lede" id="lede">いま、日本は</div>
+
+  <section class="card" id="card"></section>
+
+  <div class="next">
+    <span>次の県まで</span>
+    <b class="mono" id="countdown">--:--</b>
+  </div>
+
+  <section class="log">
+    <h2>立ち会った札</h2>
+    <div class="count mono"><span id="seen">0</span> <small>/ 48</small></div>
+    <div class="unseen" id="unseen"></div>
+    <div class="hint">
+      札は引けません。30分ごとに、次の県がひとりでに来ます。<br>
+      画面を開いている間だけ、その札に立ち会ったことになります。
+    </div>
+    <button class="reset" id="reset">記録を消す</button>
+  </section>
+
+  <footer>
+    絵：Gemini ／ 文：Claude ／ 編：無限納豆<br>
+    原典：<a href="https://note.com/vortex951/n/n3224cd9571da">都道府県タロット　北から読む日本</a>
+  </footer>
+</main>
+
+<script>
+const DATA = [{"id": 1, "pref": "北海道", "region": "北海道", "title": "開拓と余白", "scene": "大雪山が金の円を背負って立っている。逆三角形の中に広大な原野と川筋。雪の結晶が静かに中心に置かれている。", "keyword": "可能性", "message": "まだ埋まっていない余白が多い。それは弱さではなく、まだ何かが始まる前の状態を示している。", "image": "1778566973-x5TBUNGcPFkSDiR6sfCJdteW.png", "phantom": false}, {"id": 2, "pref": "青森", "region": "東北", "title": "信仰と祝祭", "scene": "岩木山の端正な稜線。ねぶた祭りの灯りが逆三角形の中で揺れている。左の鳥居と右の林檎が、神聖と豊穣を同時に語る。", "keyword": "継承", "message": "縄文から続く土地の記憶が、祭りという形で毎年更新される。", "image": "1778567370-Qf9FZmjI8w31JEO6ecAi2qn7.png", "phantom": false}, {"id": 3, "pref": "岩手", "region": "東北", "title": "静謐と技術", "scene": "三陸の岩礁が逆三角形に広がる。南部鉄器の急須がその中心に置かれている。鉄と海という異質な組み合わせが岩手の振り幅を示す。", "keyword": "精度", "message": "手間を惜しまない。それが鉄器にも、詩にも現れる。", "image": "1778567419-yfL5HVIw8caBqFprJGhADs17.png", "phantom": false}, {"id": 4, "pref": "宮城", "region": "東北", "title": "景勝と風雅", "scene": "松島の島々が逆三角形に点在している。七夕飾りが夜の水面に映る。竹と菊の静かな左右対称。", "keyword": "調和", "message": "自然の造形と人の祈りが同じ画面に収まっている。", "image": "1778567470-gQWCEtR0IdK6Bbs4exVuZmDk.png", "phantom": false}, {"id": 5, "pref": "秋田", "region": "東北", "title": "深さと豊穣", "scene": "田沢湖の水深は423メートル。日本一深い湖が逆三角形に沈んでいる。竿燈まつりの提灯が縦に連なる。杉と稲穂の両立。", "keyword": "蓄積", "message": "見えないところに深さがある。", "image": "1778567527-xP5ohvcFWOL7X81tTJwVrAej.png", "phantom": false}, {"id": 6, "pref": "山形", "region": "東北", "title": "流れと祝い", "scene": "最上川が逆三角形を貫いて流れる。花笠が中心で円を描く。桜と葡萄、春と秋が並立している。", "keyword": "移ろい", "message": "川は止まらない。祭りも毎年来る。", "image": "1778567597-C7BZvw1iGLRkhcTn2XSqAOQ3.png", "phantom": false}, {"id": 7, "pref": "福島", "region": "東北", "title": "鏡と再生", "scene": "猪苗代湖の水面が空を映している。漆器の椀が右上で静かに光る。磐梯山の横広な山容が金の円を受け止める。", "keyword": "反射", "message": "傷ついた土地が、それでも光を映し返す。", "image": "1778567676-dlqcG2o3BeIp1s4VRaMH5hjJ.png", "phantom": false}, {"id": 8, "pref": "茨城", "region": "関東", "title": "双峰と滝", "scene": "筑波山の二つの峰が金の円を背に立つ。偕楽園の梅が枝を伸ばし、その下の逆三角形には袋田の滝が幾重にも流れ落ちる。", "keyword": "重なり", "message": "ひとつに見えるものにも、いくつもの峰と流れがある。違いを抱えたまま、一つの景色になる。", "image": "images/08_ibaraki.jpg", "phantom": true}, {"id": 9, "pref": "栃木", "region": "関東", "title": "滝と聖域", "scene": "華厳の滝が逆三角形の中心を垂直に落ちている。日光東照宮の装飾紋様が水底に沈む。紅葉と苺という、渋さと可愛さの同居。", "keyword": "権威と自然の共存", "message": "人が神を祀った場所に、水が落ち続けている。", "image": "1778567714-PZqXV45F9LfgWeAwiu0D3bHU.png", "phantom": false}, {"id": 10, "pref": "群馬", "region": "関東", "title": "三山と湯", "scene": "赤城・榛名・妙義の上毛三山が金の円を背に連なる。桑と繭、その下の逆三角形には草津温泉の湯畑から白い湯気が立ち上る。", "keyword": "内熱", "message": "静かな山の下にも、地面の奥にも、目には見えない熱が流れ続けている。", "image": "images/10_gunma.jpg", "phantom": true}, {"id": 11, "pref": "埼玉", "region": "関東", "title": "祭りの夜", "scene": "武甲山は石灰岩で削られた独特の山容をしている。秩父夜祭の提灯が逆三角形に満ちている。あの祭りの密度は、内陸の県が持つ熱量の証明だ。", "keyword": "内側の熱", "message": "派手に見えないが、夜になると火が灯る。", "image": "1778567760-9ENp8VjM5xaustSv7UDlX6Qn.png", "phantom": false}, {"id": 12, "pref": "千葉", "region": "関東", "title": "海と石", "scene": "太平洋から金の円が昇り、犬吠埼の灯台が海を見つめる。菜の花と落花生、その下の逆三角形には鋸山の岩壁と大仏が浮かぶ。", "keyword": "展望", "message": "海の向こうを見ることと、自分の足元を見つめること。その両方が、新しい景色を開いていく。", "image": "images/12_chiba.jpg", "phantom": true}, {"id": 13, "pref": "東京", "region": "関東", "title": "塔と門", "scene": "山がない。その代わりにスカイツリーが金の円を突き抜けた。人工物が自然物の役割を担う、それが東京だ。逆三角形に夜景の密度が圧縮されて、底に雷門が鎮座する。", "keyword": "集積", "message": "あらゆるものが集まり続ける場所。", "image": "1778582978-noc9JWjrhFfbmK5MC8IYBLD3.png", "phantom": false}, {"id": 14, "pref": "神奈川", "region": "関東", "title": "波と仏", "scene": "富士山が神奈川から見える。静岡からとは違う角度で、少し遠く、少し低い。同じ山なのに見え方が変わる。それが神奈川という場所だ。大波と大仏が逆三角形に同居している。荒々しさと静けさ。", "keyword": "対比の中の均衡", "message": "荒々しさと静けさが、同じ場所に同居している。", "image": "1778582910-EgtT2hRLjHu1JxqCDrd7nmkS.png", "phantom": false}, {"id": 15, "pref": "新潟", "region": "中部", "title": "米と太鼓", "scene": "日本海側最大の県。チューリップと稲穂が並ぶ。春と秋、花と食が同じ画面に収まる。佐渡の太鼓が逆三角形の底に置かれている。鬼太鼓。", "keyword": "豊かさの重さ", "message": "これだけ実れば、それなりの覚悟がいる。", "image": "1778583081-CK4kRWwMueUGla0Yxv9TpB3f.png", "phantom": false}, {"id": 16, "pref": "富山", "region": "中部", "title": "雪峰と峡谷", "scene": "雪を抱いた立山連峰が金の円を背に連なる。雷鳥とチューリップ、その下の逆三角形には黒部峡谷と小さな鉄道が走る。", "keyword": "深度", "message": "高く登るほど、谷は深くなる。見える高さと見えない深さは、いつも同時に存在している。", "image": "images/16_toyama.jpg", "phantom": true}, {"id": 17, "pref": "石川", "region": "中部", "title": "庭と海", "scene": "兼六園の徽軫灯籠と松が、金の円を背に静かに立つ。逆三角形には能登の海と白米千枚田。金箔の光が、水と田を細く縁取っている。", "keyword": "洗練", "message": "自然を整え、手を加え、それでも自然の美しさを失わない。", "image": "images/17_ishikawa.jpg", "phantom": true}, {"id": 18, "pref": "福井", "region": "中部", "title": "断崖と太古", "scene": "東尋坊の岩壁に日本海の波が打ち寄せる。越前水仙が潮風に揺れ、その下の地層には恐竜の化石が眠っている。", "keyword": "発掘", "message": "失われたものは、消えたのではなく、まだ深いところに埋まっているのかもしれない。", "image": "images/18_fukui.jpg", "phantom": true}, {"id": 19, "pref": "山梨", "region": "中部", "title": "鏡の富士", "scene": "富士五湖が富士山を映している。山と水鏡。信玄の軍配が底に沈む。葡萄と桃という、日本屈指の果物産地。", "keyword": "反映", "message": "山があるから湖が生まれ、湖があるから山が映る。", "image": "1778583220-xbc1u5C6MgPXif82kSyeVsZ4.png", "phantom": false}, {"id": 20, "pref": "長野", "region": "中部", "title": "アルプスの重力", "scene": "北アルプスが逆三角形に奥へ奥へと続いている。善光寺の燈籠が底に立つ。りんごと蕎麦の花。", "keyword": "高さへの意志", "message": "3000メートル級が連なる県に住むということは、日常的に高さを意識することだ。", "image": "1778583358-e3Nui4WBR0gn1JF5Qw76SUfA.png", "phantom": false}, {"id": 21, "pref": "岐阜", "region": "中部", "title": "火と紙", "scene": "長良川の鵜飼い。松明が水面に揺れて、鵜が魚を追う。あれは漁ではなく儀式に近い。和紙と鵜。", "keyword": "技の継承", "message": "炎と手仕事が同じ画面に収まっている。", "image": "1778583411-e4Q1iO95qX0HbRSDgaVdyTL2.png", "phantom": false}, {"id": 22, "pref": "静岡", "region": "中部", "title": "富士の正面", "scene": "富士山を正面から見る県。これ以上言うことはない。お茶とみかん、茶の渋さと柑橘の甘さ。三保の松原が逆三角形の底で広がっている。", "keyword": "正対", "message": "正面から向き合うことを恐れない土地。", "image": "1778583102-Q9MV1WAwOj6Ptk3YZnUhvNco.png", "phantom": false}, {"id": 23, "pref": "愛知", "region": "中部", "title": "鯱と錨", "scene": "名古屋城の鯱が逆三角形の底で躍動している。菊と錨。伊勢湾の工業夜景。", "keyword": "製造する意志", "message": "ものを作り続けることへの執着が、この県を動かしている。", "image": "1778583457-GB0UfY5DlbhVgdvCu4LSiEmQ.png", "phantom": false}, {"id": 24, "pref": "三重", "region": "近畿", "title": "聖と海", "scene": "伊勢神宮と真珠と海女。三重は聖俗が混在している。大台ヶ原の深い森が山として立つ。", "keyword": "層の深さ", "message": "表面だけでは読めない。", "image": "1778585600-OvJW5QI7dPZFB12tChgAzrlH.png", "phantom": false}, {"id": 25, "pref": "滋賀", "region": "近畿", "title": "湖の国", "scene": "琵琶湖が逆三角形に広がる。彦根城が底に浮かぶ。信楽たぬきが右側で笑っている。葦と狸。", "keyword": "余白の豊かさ", "message": "琵琶湖という巨大な空白が、この県を成立させている。", "image": "1778583680-feHi7FZsBVJd1MEPb0nDOraL.png", "phantom": false}, {"id": 26, "pref": "京都", "region": "近畿", "title": "層と層", "scene": "比叡山の山頂に寺がある。伏見稲荷の鳥居が底から続く。友禅と茶筅。", "keyword": "堆積", "message": "時間が積み重なって、今も積み重なっている。", "image": "1778583703-JwYayfNl6QHctUCegmEXiqvD.png", "phantom": false}, {"id": 27, "pref": "大阪", "region": "近畿", "title": "賑やかな底力", "scene": "通天閣が金の円を目指す。たこ焼きと百合。大阪城と湾岸夜景。看板の文字まで読める。", "keyword": "生の肯定", "message": "食べて、騒いで、それが哲学になっている。", "image": "1778583726-7WzdBvxAtbE5FDs4fKOcm2uL.png", "phantom": false}, {"id": 28, "pref": "兵庫", "region": "近畿", "title": "橋と牛", "scene": "明石海峡大橋が逆三角形の水面に映える。但馬牛が堂々と立つ。杉玉と姫路城。", "keyword": "接続", "message": "本州と四国を繋ぎ、都市と農村を一枚の県に収める。", "image": "1778583754-wCYsAcWO7J4bMujFlRPGzfq2.png", "phantom": false}, {"id": 29, "pref": "奈良", "region": "近畿", "title": "鹿と仏", "scene": "鹿が左側に立っている。東大寺が底に広がる。吉野山の重なる峰、柿の実。", "keyword": "古さの現在形", "message": "古いものが今も生きている場所。", "image": "1778583781-7hGuUnWRlTXydMLA5BD9xIop.png", "phantom": false}, {"id": 30, "pref": "和歌山", "region": "近畿", "title": "垂直の聖地", "scene": "那智の滝が上から下まで一枚を貫いている。高野山、熊野、みかん。", "keyword": "垂直の信仰", "message": "山から滝へ、天から地へ。縦の軸で生きる土地。", "image": "1778583805-hq7vAV0eUM2gG6sPLD8W5BCp.png", "phantom": false}, {"id": 31, "pref": "鳥取", "region": "中国", "title": "砂と弧", "scene": "砂丘の風紋が上にも下にも入っている。浦富の岩拱門。日本梨と大山。", "keyword": "消えては残るもの", "message": "風が砂を動かす。それでも砂丘はある。", "image": "1778584996-PW8HVDo3miZB4NxfGpQRr7w0.png", "phantom": false}, {"id": 32, "pref": "島根", "region": "中国", "title": "神話の重量", "scene": "出雲大社の注連縄。石見神楽の鬼面。牡丹と隠岐島。", "keyword": "起源", "message": "日本の神話が生まれた場所は、今も重力が違う。", "image": "1778583876-RwNtA5qZad3eW7hlBYrpXuSc.png", "phantom": false}, {"id": 33, "pref": "岡山", "region": "中国", "title": "庭と海", "scene": "後楽園の松と池が底に広がる。白桃とマスカット。瀬戸内の島々。", "keyword": "整えられた美", "message": "自然を人が整えて、それがまた自然に見える。", "image": "1778583949-ZQacNwy0C5Uls1fYtDFPiGVd.png", "phantom": false}, {"id": 34, "pref": "広島", "region": "中国", "title": "鳥居と牡蠣", "scene": "厳島の海上鳥居が逆三角形の水面に映えている。紅葉と牡蠣。このシリーズで最も静かな水面。", "keyword": "水の記憶", "message": "海が全てを映し、全てを覚えている。", "image": "1778583996-T37kUWVapXu6qGEzDj5JCfib.png", "phantom": false}, {"id": 35, "pref": "山口", "region": "中国", "title": "橋と海峡", "scene": "錦帯橋の五つのアーチが底に。関門海峡を船が行き交う。河豚と萩焼。", "keyword": "端の力", "message": "本州の端にいることが、この土地を鍛えた。", "image": "1778585814-qWl2r4xyGsmoJanRfEktFIQN.png", "phantom": false}, {"id": 36, "pref": "徳島", "region": "四国", "title": "渦と踊り", "scene": "鳴門の渦潮が逆三角形に広がる。阿波踊りの踊り子が躍動する。すだちと大歩危の山。", "keyword": "動くことの哲学", "message": "踊らにゃ損々。止まらないことが答えだ。", "image": "1778584094-hSLdHBQY1M2kqjFe9vp7J36P.png", "phantom": false}, {"id": 37, "pref": "香川", "region": "四国", "title": "階段の先", "scene": "金刀比羅さんの石段が底から天へ続く。うどんとオリーブ。讃岐平野の穏やかな山。", "keyword": "積み上げる日常", "message": "一段一段、毎日登ることが信仰になる。", "image": "1778584148-jimxPvTQSXOf0UgKVJzAy3wq.png", "phantom": false}, {"id": 38, "pref": "愛媛", "region": "四国", "title": "峰と橋", "scene": "石鎚山の険しい岩肌。しまなみ海道の橋。みかんと砥部焼。松山城。", "keyword": "険しさの先にある繋がり", "message": "難所を越えた先に、橋がある。", "image": "1778584793-1ze2I3p4Wrmj709XnOPRlxga.png", "phantom": false}, {"id": 39, "pref": "高知", "region": "四国", "title": "龍馬と黒潮", "scene": "龍馬が太平洋を背に立っている。カツオと柚子。黒潮の広大な水面。", "keyword": "開かれた意志", "message": "海に向かって立つ人間は、遠くを見る。", "image": "1778584221-5bL4GvCs0c26YPA9nFHq8UIf.png", "phantom": false}, {"id": 40, "pref": "福岡", "region": "九州・沖縄", "title": "玄関の熱", "scene": "太宰府の鳥居と梅。博多の夜景。明太子と博多織。スカイタワーが逆三角形に立つ。", "keyword": "受け取る力", "message": "大陸から何かが来る時、最初に受け取るのがここだ。", "image": "1778584237-etK8Bsmd1SykGgfFbcOjLp5I.png", "phantom": false}, {"id": 41, "pref": "佐賀", "region": "九州・沖縄", "title": "干潟と気球", "scene": "有明海の干潟が広大に広がる。熱気球と有田焼。吉野ヶ里の物見櫓が静かに立つ。", "keyword": "見えないものの豊かさ", "message": "干潟は引き潮の時にしか現れない。", "image": "1778584270-sSaHLtrE4fdOMZPJQiKzRY8V.png", "phantom": false}, {"id": 42, "pref": "長崎", "region": "九州・沖縄", "title": "出島の形", "scene": "出島の扇形が底に浮かぶ。雲仙の噴煙。椿とカステラ。港町の夜景。", "keyword": "接点", "message": "閉じていた時代に、唯一開いていた場所。", "image": "1778584281-235SvQZHca1UBCIfVoXpzs8F.png", "phantom": false}, {"id": 43, "pref": "熊本", "region": "九州・沖縄", "title": "阿蘇の器", "scene": "阿蘇のカルデラは世界最大級だ。その巨大な器の中に人が住んでいる。蓮根とサンゴ。熊本城の石垣。", "keyword": "器の大きさ", "message": "火山が作った器に、命が満ちている。", "image": "1778584308-S7KdTN1xzvUQbYjceLaCFkuD.png", "phantom": false}, {"id": 44, "pref": "大分", "region": "九州・沖縄", "title": "湯と鳥居", "scene": "別府の湯煙が逆三角形に立ち込める。宇佐神宮の鳥居が水面に浮かぶ。かぼすと温泉の湯気。", "keyword": "地熱", "message": "地面の下から熱が来る。それが生活になっている。", "image": "1778584603-xhmP37jATGI0tBULZ9Hycz2J.png", "phantom": false}, {"id": 45, "pref": "宮崎", "region": "九州・沖縄", "title": "南の神話", "scene": "霧島の噴煙。青島神社の鬼の洗濯板。ハイビスカスとマンゴー。", "keyword": "神代の明るさ", "message": "天孫降臨の地は、今も光が強い。", "image": "1778584743-BymDaUeFM325PS8qufGQLhCY.png", "phantom": false}, {"id": 46, "pref": "鹿児島", "region": "九州・沖縄", "title": "火山と庭", "scene": "桜島が上にも逆三角形にも描かれている。薩摩切子と芋の葉。仙巌園の庭が灰の中に広がる。", "keyword": "共存", "message": "噴火し続ける山の隣で、庭を作る。それが答えだ。", "image": "1778584711-wnK9fvWcjOS6aUAkR7GgqtCs.png", "phantom": false}, {"id": 47, "pref": "沖縄", "region": "九州・沖縄", "title": "別の青", "scene": "このシリーズで唯一、海の青が画面に入った。首里城、シーサー、ハイビスカス、熱帯魚。", "keyword": "固有の時間", "message": "本土とは違う速さで、違う色で、時間が流れている。", "image": "1778584691-edpaYkCRN9l7OmJnTMvDIyi0.png", "phantom": false}];
+const IMG_BASE = "https://assets.st-note.com/img/";
+const PHANTOM_BASE = "https://smil17990-arch.github.io/tarot-todofuken/";
+const KEY = "tarot1440.witnessed.v1";
+const SLOT = 30;           // 1枠30分
+const SLOTS = 48;          // 起点1 + 47県
+
+/* 48枠 = 起点「日本」+ 47県（北→南） */
+const DECK = [{
+  id:0, pref:"日本", region:"起点", title:"はじまりの三十分",
+  scene:"まだどの県でもない三十分。北へ向かう前の、島全体の姿。",
+  keyword:"起点", message:"ここから北海道に向かって、光が一日かけて南へ降りていく。",
+  image:null, phantom:false
+}].concat(DATA);
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,"0");
+const imgUrl = p => p.phantom ? PHANTOM_BASE + p.image : IMG_BASE + p.image;
+const slotStart = i => pad(Math.floor(i*SLOT/60)) + ":" + pad((i*SLOT)%60);
+const slotEnd = i => i===SLOTS-1 ? "24:00" : slotStart(i+1);
+
+function load(){
+  try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; }
+}
+function save(o){
+  try { localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){}
+}
+
+let witnessed = load();
+let shownSlot = -1;
+
+function renderRail(current){
+  const rail = $("rail");
+  if(rail.children.length !== SLOTS){
+    rail.innerHTML = "";
+    for(let i=0;i<SLOTS;i++){
+      const d = document.createElement("div");
+      d.className = "tick";
+      d.title = DECK[i].pref + " " + slotStart(i);
+      rail.appendChild(d);
+    }
+  }
+  [...rail.children].forEach((el,i)=>{
+    el.classList.toggle("seen", !!witnessed[i]);
+    el.classList.toggle("now", i===current);
+  });
+}
+
+function el(tag,cls,text){
+  const e=document.createElement(tag);
+  e.className=cls;
+  if(text!==undefined) e.textContent=text;
+  return e;
+}
+function originBlock(p){
+  const d=el("div","origin");
+  d.appendChild(el("span",null,p.pref));
+  return d;
+}
+
+function renderCard(i){
+  const p = DECK[i];
+  const card = $("card");
+  card.innerHTML = "";
+
+  const frame = el("div","frame");
+  if(p.image){
+    const img = document.createElement("img");
+    img.src = imgUrl(p);
+    img.alt = p.pref + "の札";
+    img.addEventListener("error", function(){
+      frame.innerHTML = "";
+      frame.appendChild(originBlock(p));
+    });
+    frame.appendChild(img);
+  } else {
+    frame.appendChild(originBlock(p));
+  }
+  card.appendChild(frame);
+
+  const body = el("div","body");
+  body.appendChild(el("div","pref",p.pref));
+  body.appendChild(el("div","title",p.title));
+  body.appendChild(el("div","tri"));
+  body.appendChild(el("div","keyword",p.keyword));
+  body.appendChild(el("div","message",p.message));
+  body.appendChild(el("div","scene",p.scene));
+  if(p.phantom) body.appendChild(el("div","phantom","幻の六枚"));
+  card.appendChild(body);
+
+  card.classList.remove("turning");
+  void card.offsetWidth;
+  card.classList.add("turning");
+  $("lede").textContent = i===0 ? "一日が始まる前の、三十分" : "いま、日本は";
+}
+
+function renderLog(current){
+  const seen = Object.keys(witnessed).length;
+  $("seen").textContent = seen;
+  const rest = [];
+  for(let k=1;k<=SLOTS;k++){
+    const i = (current + k) % SLOTS;
+    if(!witnessed[i]) rest.push(i);
+  }
+  if(rest.length === 0){
+    $("unseen").innerHTML = "四十八枚すべてに立ち会いました。眠っていない一日が、どこかにあったということです。";
+  } else {
+    const next3 = rest.slice(0,3).map(i =>
+      '<b>'+DECK[i].pref+'</b> <span class="mono">'+slotStart(i)+'</span>'
+    ).join("　／　");
+    $("unseen").innerHTML = "まだ立ち会っていない札：残り " + rest.length + " 枚<br>次に来るのは　" + next3;
+  }
+}
+
+function tick(){
+  const now = new Date();
+  const mins = now.getHours()*60 + now.getMinutes();
+  const cur = Math.floor(mins / SLOT);
+
+  $("clock").innerHTML = pad(now.getHours())+":"+pad(now.getMinutes())+
+    '<span class="sec">:'+pad(now.getSeconds())+'</span>';
+  $("range").textContent = slotStart(cur) + " — " + slotEnd(cur);
+
+  const left = (cur+1)*SLOT*60 - (mins*60 + now.getSeconds());
+  $("countdown").textContent = pad(Math.floor(left/60)) + ":" + pad(left%60);
+
+  if(document.visibilityState === "visible" && !witnessed[cur]){
+    witnessed[cur] = now.toISOString();
+    save(witnessed);
+  }
+  if(cur !== shownSlot){
+    shownSlot = cur;
+    renderCard(cur);
+  }
+  renderRail(cur);
+  renderLog(cur);
+}
+
+$("reset").addEventListener("click", ()=>{
+  if(confirm("立ち会った記録をすべて消します。よろしいですか。")){
+    witnessed = {};
+    save(witnessed);
+    tick();
+  }
+});
+document.addEventListener("visibilitychange", tick);
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
